@@ -13,6 +13,7 @@ sdfsdf@@@@@rdfdf
 example@localhost
 СУТЬ ОБРАБОТКИ:
 Группировка адресов по имени домена, подсчёт email-адресов для каждого домена.
+
 ВЫХОДНЫЕ ДАННЫЕ:
 Имена доменов и количество адресов в каждом домене. Сортировка по количеству адресов в домене, по убыванию.
 Отдельной строкой — количество невалидных адресов. Пример:
@@ -27,15 +28,35 @@ INVALID	1
 
 use strict;
 use warnings;
+use Email::Valid;
 
-my @arr = ();
+my @email = ();
 my %hash = ();
 my $value = 1;
 my $invalid = 0;
-my $k;
-my $v;
 
 open(LIST, '<', 'list_email.txt');
-	@arr = <LIST>;
+	@email = <LIST>;
 close(LIST);
+
+foreach (@email)
+{
+	chomp;
+	my $addr = Email::Valid->address($_);
+	if($addr){
+		$addr =~ m/@([a-z]?[a-z0-9]+\.[a-z]{2,6})/;
+		if (exists($hash{$1})) {
+			$hash{$1}++
+		} else { 
+			$hash{$1} = $value;
+		}
+	} else {
+		++$invalid;
+	}
+}
+
+for my $key ( sort { $hash{$b} <=> $hash{$a} } keys %hash ) {
+	printf "%s : %d\n", $key, $hash{$key};
+}
+print "INVALID : $invalid";
 
